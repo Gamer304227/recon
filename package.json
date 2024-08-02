@@ -1,0 +1,13 @@
+{
+  "name": "express-puppeteer-screenshot",
+  "version": "1.0.0",
+  "description": "Express application that uses Puppeteer to take screenshots",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "puppeteer": "^10.0.0"
+  }
+}
