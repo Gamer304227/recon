@@ -4,13 +4,7 @@
   "description": "Express application that uses Puppeteer to take screenshots",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.17.1",
-    "puppeteer": "^22.8.2"
-  },
-  "scripts": {
+    "start": "node index.js",
     "postinstall": "apt-get update && apt-get install -y \
       libx11-xcb1 \
       libxcomposite1 \
@@ -28,5 +22,9 @@
       libappindicator3-1 \
       libasound2-dev \
       libgtk-3-0"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "puppeteer": "^22.8.2"
   }
 }
