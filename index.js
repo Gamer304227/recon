@@ -9,7 +9,7 @@ async function runPuppeteer(link) {
   // Launch Puppeteer browser instance
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for cloud environments like Railway
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'], // Required for cloud environments like Railway
   });
   const page = await browser.newPage();
 
