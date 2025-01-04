@@ -52,13 +52,21 @@ async function runPuppeteer(link) {
       await page.click('#verify_btn');
       
       // Wait for 12 seconds
-      await delay(12000);
+      await delay(15000);
       
       // Extract the href from the button
       const hrefValue = await page.evaluate(() => {
         const verifyBtn = document.querySelector('#verify_btn');
         return verifyBtn?.href || null;
       });
+
+      if(hrefValue == 'javascript:void(0)') {
+        await delay(5000);
+        const hrefValue = await page.evaluate(() => {
+          const verifyBtn = document.querySelector('#verify_btn');
+          return verifyBtn?.href || null;
+        });
+      }
 
       return hrefValue;
     } else {
