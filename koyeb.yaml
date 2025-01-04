@@ -1,0 +1,12 @@
+service:
+  name: recon
+  type: web
+  instance:
+    type: free
+    regions:
+      - was
+  ports:
+    - port: 8000
+      protocol: http
+  buildpacks:
+    - name: nodejs
