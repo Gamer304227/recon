@@ -1,75 +1,102 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
-
 const app = express();
-const port = process.env.PORT || 8000; // Railway uses PORT env variable
+const port = process.env.PORT || 8000;
 
 // Function to run Puppeteer and extract the href value
 async function runPuppeteer(link) {
-  // Launch Puppeteer browser instance
+  // Launch Puppeteer browser instance with specific Chrome path
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage'], // Required for cloud environments like Railway
+    headless: 'new',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-dev-shm-usage',
+      '--single-process'
+    ],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome'
   });
-  const page = await browser.newPage();
 
-  // Open the link
-  await page.goto(link);
-
-  // Wait for 2 seconds before checking the URL
-  await page.waitForTimeout(2000);
-
-  // Get the current URL of the page
-  const currentUrl = await page.url();
-
-  // Check if the URL is one of the allowed URLs
-  if (currentUrl.startsWith('https://inventoryidea.com/') || currentUrl.startsWith('https://stockwallah.com')) {
-    // Click on the verify button
-    await page.click('#verify_btn');
-
-    // Wait for 12 seconds
-    await page.waitForTimeout(12000);
-
-    // Extract the href from the button
-    const hrefValue = await page.evaluate(() => {
-      const verifyBtn = document.querySelector('#verify_btn');
-      if (verifyBtn && verifyBtn.href) {
-        return verifyBtn.href;
-      }
-      return null;
+  try {
+    const page = await browser.newPage();
+    
+    // Set viewport
+    await page.setViewport({
+      width: 1280,
+      height: 800
     });
 
-    await browser.close();
+    // Open the link
+    await page.goto(link, {
+      waitUntil: 'networkidle0',
+      timeout: 30000
+    });
 
-    return hrefValue;
-  } else {
+    // Wait for 2 seconds before checking the URL
+    await page.waitForTimeout(2000);
+
+    // Get the current URL of the page
+    const currentUrl = await page.url();
+
+    // Check if the URL is one of the allowed URLs
+    if (currentUrl.startsWith('https://inventoryidea.com/') || currentUrl.startsWith('https://stockwallah.com')) {
+      // Wait for the verify button to be available
+      await page.waitForSelector('#verify_btn', { timeout: 10000 });
+      
+      // Click on the verify button
+      await page.click('#verify_btn');
+      
+      // Wait for 12 seconds
+      await page.waitForTimeout(12000);
+      
+      // Extract the href from the button
+      const hrefValue = await page.evaluate(() => {
+        const verifyBtn = document.querySelector('#verify_btn');
+        return verifyBtn?.href || null;
+      });
+
+      return hrefValue;
+    } else {
+      throw new Error('Invalid URL');
+    }
+  } catch (error) {
+    console.error('Puppeteer error:', error);
+    throw error;
+  } finally {
+    // Always close the browser
     await browser.close();
-    throw new Error('Invalid URL');
   }
 }
 
 // API endpoint for /h4
 app.get('/h4', async (req, res) => {
   const { link } = req.query;
-
+  
   if (!link) {
     return res.status(400).json({ success: false, error: 'No link parameter provided' });
   }
 
   try {
     const result = await runPuppeteer(link);
-
     if (result) {
       return res.json({ success: true, result: result });
     } else {
       return res.status(404).json({ success: false, error: 'Href value not found' });
     }
   } catch (error) {
+    console.error('API error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// Add a health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // Start the server
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
