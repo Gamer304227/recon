@@ -5,18 +5,18 @@ const port = process.env.PORT || 8000;
 
 // Function to run Puppeteer and extract the href value
 async function runPuppeteer(link) {
-  // Launch Puppeteer browser instance with specific Chrome path
+  // Launch Puppeteer browser instance
   const browser = await puppeteer.launch({
     headless: 'new',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-gpu',
-      '--disable-software-rasterizer',
       '--disable-dev-shm-usage',
-      '--single-process'
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1920x1080'
     ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome'
+    executablePath: '/usr/bin/google-chrome-stable'  // Updated path
   });
 
   try {
@@ -66,7 +66,9 @@ async function runPuppeteer(link) {
     throw error;
   } finally {
     // Always close the browser
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 }
 
