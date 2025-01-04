@@ -2,7 +2,7 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const port = process.env.PORT || 3000; // Railway uses PORT env variable
+const port = process.env.PORT || 8000; // Railway uses PORT env variable
 
 // Function to run Puppeteer and extract the href value
 async function runPuppeteer(link) {
