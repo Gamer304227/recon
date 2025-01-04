@@ -3,6 +3,9 @@ const puppeteer = require('puppeteer');
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Helper function to create a delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Function to run Puppeteer and extract the href value
 async function runPuppeteer(link) {
   // Launch Puppeteer browser instance
@@ -16,7 +19,7 @@ async function runPuppeteer(link) {
       '--disable-gpu',
       '--window-size=1920x1080'
     ],
-    executablePath: '/usr/bin/google-chrome-stable'  // Updated path
+    executablePath: '/usr/bin/google-chrome-stable'
   });
 
   try {
@@ -34,8 +37,8 @@ async function runPuppeteer(link) {
       timeout: 30000
     });
 
-    // Wait for 2 seconds before checking the URL
-    await page.waitForTimeout(2000);
+    // Wait for 2 seconds
+    await delay(2000);
 
     // Get the current URL of the page
     const currentUrl = await page.url();
@@ -49,7 +52,7 @@ async function runPuppeteer(link) {
       await page.click('#verify_btn');
       
       // Wait for 12 seconds
-      await page.waitForTimeout(12000);
+      await delay(12000);
       
       // Extract the href from the button
       const hrefValue = await page.evaluate(() => {
