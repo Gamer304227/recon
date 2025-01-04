@@ -45,7 +45,9 @@ async function runPuppeteer(link) {
 
     // Check if the URL is one of the allowed URLs
     if (currentUrl.startsWith('https://inventoryidea.com/') || currentUrl.startsWith('https://stockwallah.com')) {
-      if(document.querySelector("#verify_btn")) {
+      const verifyButtonExists = await page.evaluate(() => !!document.querySelector("#verify_btn"));
+      
+      if(verifyButtonExists) {
         await page.click('#verify_btn');
       } else {
         await delay(3000);
