@@ -46,25 +46,28 @@ async function runPuppeteer(link) {
     // Check if the URL is one of the allowed URLs
     if (currentUrl.startsWith('https://inventoryidea.com/') || currentUrl.startsWith('https://stockwallah.com')) {
       const verifyButtonExists = await page.evaluate(() => !!document.querySelector("#verify_btn"));
-      
-      if(verifyButtonExists) {
+
+      if (verifyButtonExists) {
+        // Click the button
         await page.click('#verify_btn');
       } else {
-        await delay(3000);
         await page.click('#verify_btn');
+        throw new Error('Verify button not found');
       }
-      
 
-      // Wait for 12 seconds
-      await delay(12000);
+      // Wait for 5 seconds after the button click
+      await delay(15000);
 
-      // Extract the href from the button
+      // Get the current URL after the button click
+      const updatedUrl = await page.url();
+
+      // Check if the button still exists and extract its href value
       const hrefValue = await page.evaluate(() => {
         const verifyBtn = document.querySelector('#verify_btn');
         return verifyBtn?.href || null;
       });
 
-      return hrefValue;
+      return { updatedUrl, hrefValue };
     } else {
       throw new Error('Invalid URL');
     }
