@@ -40,37 +40,42 @@ async function runPuppeteer(link) {
     let currentUrl = await page.url();
     console.log(`Initial URL: ${currentUrl}`);
 
-    while (currentUrl !== 'https://aryx.xyz') {
+    while (!currentUrl.startsWith('https://aryx.xyz')) {
       // Wait for 5 seconds
       await delay(5000);
 
-      // Execute the command in the console
+      // Execute the command in the console if the page hasn't already reloaded
       await page.evaluate(() => {
-        document.querySelector("#btn6")?.click();
+        const button = document.querySelector("#btn6");
+        if (button) {
+          button.click();
+        }
       });
 
       // Wait for 2 seconds before checking for reload
       await delay(2000);
 
       // Check if the page has reloaded
-      currentUrl = await page.url();
-      console.log(`Current URL after reload: ${currentUrl}`);
-
-      if (currentUrl.startsWith('https://aryx.xyz')) {
-        // Once the target URL is reached, execute the next command
-        await page.evaluate((ULink) => {
-          window.location.href = `${ULink}`;
-        }, link);
-
-        // Wait for 4 seconds
-        await delay(4000);
-
-        // Update the current URL
-        currentUrl = await page.url();
-        break;
+      const newUrl = await page.url();
+      if (newUrl !== currentUrl) {
+        console.log(`Page reloaded. New URL: ${newUrl}`);
+        currentUrl = newUrl;
+      } else {
+        console.log('Page did not reload. Waiting...');
       }
     }
 
+    // Once the URL starts with https://aryx.xyz, execute the final command
+    console.log(`Final URL reached: ${currentUrl}`);
+    await page.evaluate((ULink) => {
+      window.location.href = `${ULink}`;
+    }, link);
+
+    // Wait for 4 seconds
+    await delay(4000);
+
+    // Return the final URL
+    currentUrl = await page.url();
     return currentUrl;
   } catch (error) {
     console.error('Puppeteer error:', error);
