@@ -6,11 +6,11 @@ const port = process.env.PORT || 8000;
 // Helper function to create a delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Function to run Puppeteer and extract the href value
+// Function to run Puppeteer and handle the specified logic
 async function runPuppeteer(link) {
   // Launch Puppeteer browser instance
   const browser = await puppeteer.launch({
-    headless: 'false',
+    headless: 'new',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -33,44 +33,45 @@ async function runPuppeteer(link) {
 
     // Open the link
     await page.goto(link, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'load',
       timeout: 30000
     });
 
-    // Wait for 2 seconds
-    await delay(2000);
+    let currentUrl = await page.url();
+    console.log(`Initial URL: ${currentUrl}`);
 
-    // Get the current URL of the page
-    const currentUrl = await page.url();
+    while (currentUrl !== 'https://aryx.xyz') {
+      // Wait for 5 seconds
+      await delay(5000);
 
-    // Check if the URL is one of the allowed URLs
-    if (currentUrl.startsWith('https://inventoryidea.com/') || currentUrl.startsWith('https://stockwallah.com')) {
-      const verifyButtonExists = await page.evaluate(() => !!document.querySelector("#verify_btn"));
-
-      if (verifyButtonExists) {
-        // Click the button
-        await page.click('#verify_btn');
-      } else {
-        await page.click('#verify_btn');
-        throw new Error('Verify button not found');
-      }
-
-      // Wait for 5 seconds after the button click
-      await delay(15000);
-
-      // Get the current URL after the button click
-      const updatedUrl = await page.url();
-
-      // Check if the button still exists and extract its href value
-      const hrefValue = await page.evaluate(() => {
-        const verifyBtn = document.querySelector('#verify_btn');
-        return verifyBtn?.href || null;
+      // Execute the command in the console
+      await page.evaluate(() => {
+        document.querySelector("#btn6")?.click();
       });
 
-      return { updatedUrl, hrefValue };
-    } else {
-      throw new Error('Invalid URL');
+      // Wait for 2 seconds before checking for reload
+      await delay(2000);
+
+      // Check if the page has reloaded
+      currentUrl = await page.url();
+      console.log(`Current URL after reload: ${currentUrl}`);
+
+      if (currentUrl.startsWith('https://aryx.xyz')) {
+        // Once the target URL is reached, execute the next command
+        await page.evaluate((ULink) => {
+          window.location.href = `${ULink}`;
+        }, link);
+
+        // Wait for 4 seconds
+        await delay(4000);
+
+        // Update the current URL
+        currentUrl = await page.url();
+        break;
+      }
     }
+
+    return currentUrl;
   } catch (error) {
     console.error('Puppeteer error:', error);
     throw error;
@@ -82,8 +83,8 @@ async function runPuppeteer(link) {
   }
 }
 
-// API endpoint for /h4
-app.get('/h4', async (req, res) => {
+// API endpoint for /anylink
+app.get('/anylink', async (req, res) => {
   const { link } = req.query;
 
   if (!link) {
@@ -92,11 +93,7 @@ app.get('/h4', async (req, res) => {
 
   try {
     const result = await runPuppeteer(link);
-    if (result) {
-      return res.json({ success: true, result: result });
-    } else {
-      return res.status(404).json({ success: false, error: 'Href value not found' });
-    }
+    return res.json({ success: true, result: result });
   } catch (error) {
     console.error('API error:', error);
     return res.status(500).json({ success: false, error: error.message });
