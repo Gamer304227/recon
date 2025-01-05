@@ -10,7 +10,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function runPuppeteer(link) {
   // Launch Puppeteer browser instance
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: 'false',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
